@@ -4,15 +4,25 @@ open Elmish
 open Elmish.React
 open Feliz
 
+let tryParseInt (input: string) : Option<int> =
+    try Some (int input)
+    with | _ -> None
+
 type State =
-    { Count: int }
+    { Count: int
+      TextInput: string
+      NumberInput: int }
 
 type Msg =
     | Increment
     | Decrement
+    | SetTextInput of string
+    | SetNumberInput of int
 
 let init() =
-    { Count = 0 }
+    { Count = 0
+      TextInput = ""
+      NumberInput = 0 }
 
 let update (msg: Msg) (state: State): State =
     match msg with
@@ -22,20 +32,36 @@ let update (msg: Msg) (state: State): State =
     | Decrement ->
         { state with Count = state.Count - 1 }
 
+    | SetTextInput textInput ->
+        { state with TextInput = textInput }
+
+    | SetNumberInput numberInput ->
+        { state with NumberInput = numberInput }
+
 let render (state: State) (dispatch: Msg -> unit) =
+
   Html.div [
-    Html.button [
-      prop.onClick (fun _ -> dispatch Increment)
-      prop.text "Increment"
-    ]
+    Html.div [
+      Html.button [
+        prop.onClick (fun _ -> dispatch Increment)
+        prop.text "Increment"
+      ]
 
-    Html.button [
-      prop.onClick (fun _ -> dispatch Decrement)
-      prop.text "Decrement"
-    ]
+      Html.button [
+        prop.onClick (fun _ -> dispatch Decrement)
+        prop.text "Decrement"
+      ]
 
-    Html.h1 state.Count
+      Html.h1 state.Count
+    ]
+    Html.div [
+      Html.input [
+        prop.onChange (tryParseInt >> Option.iter(SetNumberInput >> dispatch))
+      ]
+      Html.span state.TextInput
+    ]
   ]
+
 
 Program.mkSimple init update render
 |> Program.withReactSynchronous "elmish-app"
